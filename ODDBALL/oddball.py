@@ -19,13 +19,14 @@ If Set true it will run it, this helps with debug.
 instruction = True
 demo_gui = True
 beh = True
-eeg = True
+eeg = False
 debug = False
-
+fullscr = False
 
 ##############################
 ### (1).Imports and Setups ###
 ##############################
+
 ## Local import ##
 import config                       # expermental variables
 import extra    	                # for logging
@@ -34,7 +35,7 @@ import instruct
 
 ## Experimental conditons generation ##
 """ Out production of list_gene is a list of list of dictionary
-    with formated as followed:
+    with formatted as followed:
 
         [[{Trial},{Trial}..][{Trial},{Trial}...]]
 
@@ -96,7 +97,7 @@ if beh:
 
     ## Initiate Window
     # using the exp_mon object above, and use degree as units.
-    win = visual.Window(monitor = exp_mon, units = "deg", fullscr = True,
+    win = visual.Window(monitor = exp_mon, units = "deg", fullscr = fullscr ,
                         allowGUI = False, color = "black")
 
     ## stimulus
@@ -187,7 +188,7 @@ def prompt(text = "", keyList=None):
 
 def block_prompt(blocks, bn, config):
     """ Experimental block prompt presentation.
-    Funciton initate experimetnal instruction prompts for beginning of each block
+    Function initiate experimental instruction prompts for beginning of each block
     for subject to read.
 
     Input:
@@ -249,9 +250,9 @@ def block_prompt(blocks, bn, config):
 def run_block(blocks, bn, config):
     """ Experimental block
     Taking in blocks and it current block number. Loop around list of dictionary,
-    excute each trials in following column_order
+    execute each trials in following column_order
 
-    Block Excuting Order
+    Block Executing Order
     1. Start with Inter-block Interval
     2. Loop around whole a block of trials
         - ISI
@@ -270,11 +271,11 @@ def run_block(blocks, bn, config):
     win.flip()
     core.wait(config.IBI) # Wait before experiment began.
 
-    # Initate parallel port by reset back to 0
+    # Initiate parallel port by reset back to 0
     pp_reset(eeg)
 
     for tr in range(len(blocks[bn])):
-        # Start trial timer, also reset timmer for intra-trial RT
+        # Start trial timer, also reset timer for intra-trial RT
         if debug:
             print(f"Block {bn} Trial {tr} ...")
         tr_glob_time = glob_t.getTime()
@@ -350,6 +351,10 @@ def run_block(blocks, bn, config):
             key = keypress(config)
             rt = rt_t.getTime()
             press_glob_time = glob_t.getTime()
+            # debug
+            if debug:
+                print("Response setup")
+                print(trial_t.getTime())
 
             # Log time
             if (key) and (got_keys == 0):
@@ -358,6 +363,10 @@ def run_block(blocks, bn, config):
                     pp.setData(config.RESP_PIN)
 
                 key_resp = key[0].capitalize()
+                if debug:
+                    print("Got Key!")
+                    print(trial_t.getTime())
+
                 # Log: Trial log
                 trial_log = dict(trial_num = tr+1,
                                   block_num = bn+1,
@@ -377,6 +386,10 @@ def run_block(blocks, bn, config):
                 tri_info.update(trial_log)
                 log.write(tri_info)
 
+                if debug:
+                    print("Finish Loging!")
+                    print(trial_t.getTime())
+
         # Miss response Log
         if got_keys == 0:
             # Log: Missing trial log
@@ -395,20 +408,24 @@ def run_block(blocks, bn, config):
             tri_info.update(trial_log)
             log.write(tri_info)
 
+            if debug:
+                print("Missing Key Loging!")
+                print(trial_t.getTime())
+
 def exp(blocks, config, glob_t, instruct):
-    """Excute the Experiment
+    """Execute the Experiment
+    Input:
+        blocks   : A list of list of dictionary with conditions and trial information
+        config   : Configuration file with all specific experimental definition
+        glob_t   : Global rt_t
+        instruct : Instruction files with all the prompt instructions
+
     Experiment flow:
         -   Instructions
             -   Initial instruction
             -   Familarized sample stimulus
             -   Final instructions before experiment begin
-        -   Excute experimental
-
-    Input:
-        blocks   : A list of list of dictionary with conditions and trial information
-        config   : Configuration file with all specific experimental definition
-        glob_t : Global rt_t
-        instruct : Instruction files with all the prompt instructions
+        -   Execute formal experimental
     """
     exp_bg = glob_t.getTime()
     print(f"Experiment began machine time : {exp_bg} ...")
@@ -450,10 +467,9 @@ def exp(blocks, config, glob_t, instruct):
 ## (3).Excute Experiment ##
 ###########################
 if __name__ == "__main__":
-    if beh:
-        # Run Experiment
-        exp(blocks, config, glob_t, instruct)
-        # debug
-        if debug:
-            exp_end = glob_t.getTime()
-            print(f" Total Experimental Run time began : {mm_time} \n End : {exp_end}")
+    # Run Experiment
+    exp(blocks, config, glob_t, instruct)
+    # debug
+    if debug:
+        exp_end = glob_t.getTime()
+        print(f" Total Experimental Run time began : {mm_time} \n End : {exp_end}")
